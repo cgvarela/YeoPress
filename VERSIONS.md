@@ -1,5 +1,12 @@
 ## Versions
 
+- **2.0.1:** Updated yeoman-generator to fix some things
+- **2.0.0:** Updated to new file api
+- **1.5.0:** Cached busting for remote resources
+- **1.4.3:** Bug fix in wp-util, updated deps, dont ignore important wp files
+- **1.4.1:** Bug fix in wp-util, updated dep
+- **1.4.0:** Added support for localization of WordPress, updated to yeoman-generator#0.16.0
+- **1.3.5:** Bug fix for vagrant
 - **1.3.4:** Bug fix for running generator with just `yo` and selecting wordpress
 - **1.3.3:** Bug fix for versions without a third part, updated default version to 3.8
 - **1.3.1:** Bug fix for windows that I forgot to get in with 1.3.0

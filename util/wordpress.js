@@ -1,11 +1,77 @@
 var https = require('https'),
+	http = require('http'),
 	fs = require('fs'),
+	util = require('util'),
 	path = require('path'),
 	mysql = require('mysql'),
 	chalk = require('chalk'),
 	exec = require('child_process').exec,
 	EventEmitter = require('events').EventEmitter,
 	wordpressRepo = "git://github.com/WordPress/WordPress.git";
+
+function getLanguage(contentDir, language, callback) {
+	var files = {
+		'': '%s.mo',
+		'admin': 'admin-%s.mo',
+		'admin/network': 'admin-network-%s.mo',
+		'twentyeleven': path.join('themes', 'twentyeleven-%s.mo'),
+		'twentytwelve': path.join('themes', 'twentytwelve-%s.mo'),
+		'twentythirteen': path.join('themes', 'twentythirteen-%s.mo'),
+		'twentyfourteen': path.join('themes', 'twentyfourteen-%s.mo'),
+	};
+
+	var requested = complete = 0, errors = [];
+	for (var file in files) {
+		requested++;
+		downloadLanguageFile(language, file, 'mo', function(err, res) {
+			if (err) {
+				return errors.push(err);
+			}
+
+			// Pipe to  file
+			var p = path.join(contentDir, 'languages', util.format(files[file], language));
+			var f = fs.createWriteStream(p);
+			res.pipe(f);
+
+			// Complete
+			res.on('end', function() {
+				complete++;
+				if (requested == complete) callback(errors.length ? null : errors);
+			});
+		});
+	}
+
+};
+
+function downloadLanguageFile(language, file, format, callback) {
+	// Build url with or without a file
+	if (file && file != '') {
+		var url = util.format('/projects/wp/dev/%s/%s/default/export-translations?format=%s', file, language, format);
+	} else {
+		var url = util.format('/projects/wp/dev/%s/default/export-translations?format=%s', language, format);
+	}
+
+	// Make request
+	http.get({
+		hostname: 'translate.wordpress.org',
+		path: url,
+	}, function(res) {
+		// Not found
+		if (res.statusCode == 404) {
+			// Retry with the language code with no region specifier
+			if (language.indexOf('_') !== -1) {
+				// es_ES => es
+				language = language.split('_')[0];
+				return downloadLanguageFile(language, file, format, callback);
+			}
+			// Not found
+			return callback(res);
+		}
+
+		// Success
+		callback(null, res);
+	}).on('error', callback);
+};
 
 function getSaltKeys(callback) {
 	var ee = new EventEmitter(),
@@ -174,7 +240,7 @@ function installTheme(generator, config, done) {
 		generator.remote(config.themeUser, config.themeRepo, config.themeBranch, function(err, remote) {
 			remote.directory('.', path.join(config.contentDir, 'themes', config.themeDir));
 			done();
-		});
+		}, config.refreshRemote);
 	} else if (config.themeType == 'tar') {
 		generator.tarball(config.themeTarballUrl, path.join(config.contentDir, 'themes', config.themeDir), done);
 	}
@@ -188,18 +254,36 @@ function setupTheme(generator, config, done) {
 	var themePath = path.join(config.contentDir, 'themes', config.themeDir),
 		themePackageJson = path.join(themePath, 'package.json');
 
+	var themeTaskFile = '',
+		themeTaskCmd = '';
+
+	if (config.themeTaskRunner == 'grunt') {
+		themeTaskFile = 'Gruntfile.js',
+		themeTaskCmd = 'grunt';
+	} else if (config.themeTaskRunner == 'gulp') {
+		themeTaskFile = 'gulpfile.js',
+		themeTaskCmd = 'gulp';
+	}
+
 	if (fs.existsSync(themePackageJson)) {
 		var oldDir = process.cwd();
 		process.chdir(themePath);
-		exec('npm install', function(err) {
-			if (fs.existsSync('Gruntfile.js')) {
-				exec('grunt setup', function(err) {
+		console.log(chalk.green('Installing Node Packages (be patient)'));
+
+		exec('npm install', function(err, stdout, stderr) {
+			if (err) {
+				console.error('Error installing packages', err, stdout, stderr);
+				return done();
+			}
+
+			if (fs.existsSync(themeTaskFile)) {
+				exec(themeTaskCmd + ' setup', function(err) {
 					console.log(chalk.green('Theme setup!'));
 					process.chdir(oldDir);
 					done();
 				});
 			} else {
-				console.log(chalk.red('Gruntfile.js missing!'));
+				console.log(chalk.red(themeTaskFile + ' missing!'));
 				process.chdir(oldDir);
 				done();
 			}
@@ -261,5 +345,7 @@ module.exports = {
 	getContentDir : getContentDir,
 	installTheme : installTheme,
 	setupTheme : setupTheme,
-	activateTheme : activateTheme
+	activateTheme : activateTheme,
+	downloadLanguageFile: downloadLanguageFile,
+	getLanguage: getLanguage,
 };

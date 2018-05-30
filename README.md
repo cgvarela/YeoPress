@@ -2,7 +2,7 @@
 
 # YeoPress
 
-The officially un-official [Yeoman](https://github.com/yeoman/yeoman) Generator for [WordPress](http://wordpress.org/).  I magically take you from scratching your head wondering where to start, all the way to running the famous 5-minute install.  I have configuration options that will WOW you.  If you use Git, I can *git* you off the ground with WordPress as a submodule just by following a couple of prompts.  Have a custom base theme you always start your projects off with?  You can install that to, either straight from GitHub or by pointing me to a tarball.  Other things I do:
+The officially un-official [Yeoman](https://github.com/yeoman/yeoman) Generator for [WordPress](http://wordpress.org/).  I magically take you from scratching your head wondering where to start, all the way to running the famous 5-minute install.  I have configuration options that will WOW you.  If you use Git, I can *git* you off the ground with WordPress as a submodule just by following a couple of prompts.  Have a custom base theme you always start your projects off with?  You can install that too, either straight from GitHub or by pointing me to a tarball.  Other things I do:
 
 - Custom directory configuration
 - Install WordPress as a Git submodule for easy version controlled updates
@@ -18,6 +18,10 @@ The officially un-official [Yeoman](https://github.com/yeoman/yeoman) Generator 
 If you do not already have the Yeoman toolset installed do so now, and might as well install me at the same time *(NOTE: don't type the `$`)*:
 
 	$ npm install -g yo generator-wordpress
+
+While running if you get errors try running as super user:
+
+	$ sudo npm install -g yo generator-wordpress
 
 And run me:
 
@@ -52,6 +56,10 @@ You probably want to be able to quickly zip through your install with similar se
 
 For a full example, open up the local `.yeopress` file that is created by the generator.  This file is located in the directory you ran `yo wordpress` in.
 
+## Installing WordPress Plugins
+
+New with `v1.4.0` is a subgenerator for installing plugins, `yo wordpress:plugin`.  You can supply a comma delimited list of plugin slugs to download.  YeoPress will download and unzip those plugins into your content directory.
+
 ### Visual Learner??
 
 [Watch the video](http://www.youtube.com/watch?v=Em-NMCgNhhY).
@@ -74,7 +82,4 @@ Custom themes can be installed from GitHub or a Tarball.  Once installed, they a
 - RequireJS ([grunt-contrib-requirejs](https://npmjs.org/package/grunt-contrib-requirejs))
 
 More information on themes [here](https://github.com/wesleytodd/YeoPress/wiki/Themes) & [here](http://wesleytodd.com/2013/5/yeopress-themes.html)
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/wesleytodd/yeopress/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 

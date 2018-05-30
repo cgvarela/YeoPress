@@ -56,9 +56,14 @@ module.exports = function(advanced, defaults) {
 			name: 'dbPass',
 			default: defaults.dbPass || null
 		}, {
+			message: 'Language',
+			name: 'wpLang',
+			default: defaults.wplang || null,
+			when: advancedWhen,
+		}, {
 			message: 'Use Git?',
 			name: 'git',
-			default: defaults.git || 'N',
+			default: defaults.git || false,
 			type: 'confirm'
 		}, {
 			message: 'Would you like to install WordPress as a submodule?',
@@ -146,13 +151,32 @@ module.exports = function(advanced, defaults) {
 			name: 'themeType',
 			default: defaults.themeType || 'git',
 			validate: function(value) {
-				if (value != '' && /^(?:git|tar)$/.test(value)) {
+				if (value != '' && /^(?:git|tar)$/i.test(value)) {
 					return true;
 				}
 				return false;
 			},
+			filter: function(value) {
+				return value.toLowerCase();
+			},
 			when: function(res) {
 				return !!res.installTheme;
+			}
+		}, {
+			message: 'Task runner (grunt/gulp)',
+			name: 'themeTaskRunner',
+			default: defaults.themeTaskRunner || 'grunt',
+			validate: function(value) {
+				if (value != '' && /^(?:grunt|gulp)$/i.test(value)) {
+					return true;
+				}
+				return false;
+			},
+			filter: function(value) {
+				return value.toLowerCase();
+			},
+			when: function(res) {
+				return !! res.installTheme;
 			}
 		}, {
 			message: 'GitHub username',
@@ -177,6 +201,15 @@ module.exports = function(advanced, defaults) {
 			validate: requiredValidate,
 			when: function(res) {
 				return !!res.installTheme && res.themeType == 'git';
+			}
+		}, {
+			message: 'Refresh remote (busts potentially cached theme)',
+			name: 'refreshRemote',
+			type: 'confirm',
+			default: defaults.refreshRemote || true,
+			validate: requiredValidate,
+			when: function(res) {
+				return advanced && !!res.installTheme && res.themeType == 'git';
 			}
 		}, {
 			message: 'Remote tarball url',
